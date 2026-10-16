@@ -34,6 +34,8 @@
 
   --brand-accent:        #D71010;   /* nút/section tư vấn */
   --brand-accent-strong: #B80D0D;   /* hover nút đỏ (đề xuất 16/10, demo CTA) */
+  --brand-accent-glow:   rgba(215,16,16,.55);   /* bóng đỏ dưới nút báo giá khi hover — CHANGE #8 */
+  --brand-sheen:         rgba(255,255,255,.32); /* vệt sáng lướt qua nút báo giá — CHANGE #8 */
   --brand-accent-deep:   #930B0B;   /* topbar */
   --brand-accent-line:   rgba(215,16,16,.5);
   --brand-on-accent:     #FFFFFF;
@@ -58,6 +60,7 @@
   --brand-shadow-card:   0 1px 2px rgba(17,25,39,.05), 0 10px 24px rgba(17,25,39,.10);
   --brand-shadow-float:  0 6px 18px rgba(17,25,39,.22);
   --brand-shadow-demo:   0 2px 4px rgba(17,25,39,.06), 0 14px 32px rgba(17,25,39,.18);
+  --brand-cta-shadow:    0 8px 18px -6px var(--brand-accent-glow);
   --brand-focus:         #0A1D3B;
 
   /* Màu riêng của lớp soi demo — không thuộc giao diện site */
@@ -76,6 +79,7 @@
   --brand-body: 'Plus Jakarta Sans', 'Be Vietnam Pro', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
 
   --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);   /* vệt sáng lướt qua nút — CHANGE #8 */
   --brand-maxw: 1236px;
   --brand-pad-x: 16px;
   --hdr-h: 166px;   /* header sticky đo trên site: topbar + logo/nav */
@@ -144,9 +148,37 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .btn--zalo { background: var(--brand-zalo); color: var(--brand-on-accent); }
 .btn-categories { background: var(--brand-navy); color: var(--brand-on-accent); }
 @media (hover: hover) and (pointer: fine) {
-  .btn--primary:hover { background: var(--brand-accent-strong); }
   .btn-categories:hover { background: var(--brand-navy-2); }
 }
+
+/* CHANGE #8 — hover 2 nút báo giá: "Danh Sách Báo Giá" (header) + "Nhận Báo Giá Ngay" (form).
+   Live: .btn-quote:hover chỉ opacity .92, .wpcf7-submit:hover chỉ brightness(.95) → gần như không thấy.
+   Nút gửi trên site là <input type="submit"> của CF7: KHÔNG có ::before/::after, KHÔNG chèn icon được
+   → vệt sáng dựng bằng background-image (input vẫn nhận) để DEV chép nguyên sang. */
+[data-mode="cur"] .btn--cta { transition: opacity 200ms ease, filter 200ms ease; }
+[data-mode="cur"] .btn--cta:active { transform: none; }   /* live: nhấn không phản hồi */
+[data-mode="pro"] .btn--cta {
+  background-image: linear-gradient(115deg, transparent 40%, var(--brand-sheen) 50%, transparent 60%);
+  background-size: 250% 100%; background-repeat: no-repeat;
+  background-position: 100% 0;   /* vệt sáng nằm chờ ngoài mép trái */
+  transition: background-color 200ms ease, transform 200ms var(--ease-out), box-shadow 200ms ease;
+}
+[data-mode="pro"] .btn--cta .ic { transition: transform 200ms var(--ease-out); }
+@media (hover: hover) and (pointer: fine) {
+  [data-mode="cur"] .hdr-desk.btn--cta:hover { opacity: .92; }                  /* = .btn-quote:hover live */
+  [data-mode="cur"] .qf-actions .btn--cta:hover { filter: brightness(.95); }    /* = .wpcf7-submit:hover live */
+  [data-mode="pro"] .btn--cta:hover {
+    background-color: var(--brand-accent-strong); background-position: 0 0;    /* vệt sáng lướt trái → phải */
+    transform: translateY(-2px); box-shadow: var(--brand-cta-shadow);
+    /* background-position chỉ khai ở :hover → rời chuột thì vệt sáng về chỗ cũ tức thì, không chạy ngược.
+       700ms nhưng đầu/cuối chậm rơi vào lúc vệt còn ngoài mép → phần thấy được ~280ms, hiện SAU khi nút nhấc xong */
+    transition: background-color 200ms ease, transform 200ms var(--ease-out), box-shadow 200ms ease, background-position 700ms var(--ease-in-out);
+  }
+  [data-mode="pro"] .btn--cta:hover .ic { transform: rotate(-10deg) translateY(-1px); }
+}
+[data-mode="pro"] .btn--cta:focus-visible { background-color: var(--brand-accent-strong); box-shadow: var(--brand-cta-shadow); }
+/* đặt SAU khối hover: cùng độ ưu tiên nên nhấn mới thắng được translateY của hover */
+[data-mode="pro"] .btn--cta:active { transform: scale(.97); box-shadow: none; transition-duration: 100ms; }
 .icon-btn { width: 44px; height: 44px; display: grid; place-items: center; border-radius: 50%; border: 1px solid var(--brand-border);
             background: var(--brand-bg); color: var(--brand-text); cursor: pointer; padding: 0; }
 .float-btn { width: 56px; height: 56px; border-radius: 50%; display: grid; place-items: center; background: var(--brand-accent);
@@ -322,6 +354,10 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .notes ul, .notes ol { margin: 0; padding-left: 20px; display: grid; gap: 6px; }
 .notes code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 13px; background: var(--brand-bg); border: 1px solid var(--brand-border);
               padding: 1px 6px; border-radius: 6px; overflow-wrap: anywhere; }
+.dev-css { margin-top: 10px; border: 1px solid var(--brand-border); border-radius: var(--brand-radius-md); background: var(--brand-bg); }
+.dev-css summary { cursor: pointer; padding: 10px 14px; font-size: 14px; font-weight: 700; min-height: 44px; display: flex; align-items: center; }
+.dev-css pre { margin: 0; padding: 12px 14px; border-top: 1px solid var(--brand-border); overflow-x: auto; font-size: 12px; line-height: 1.55; }
+.dev-css pre code { background: none; border: 0; padding: 0; font-size: inherit; overflow-wrap: normal; white-space: pre; }
 .note-tag { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 700; color: var(--brand-muted); letter-spacing: .04em; text-transform: uppercase; }
 .pin-inline { display: inline-grid; place-items: center; min-width: 22px; height: 22px; padding: 0 6px; border-radius: var(--brand-radius-pill);
               background: var(--demo-pin); color: var(--brand-on-accent); font: 800 11px/1 var(--brand-body); }
@@ -420,6 +456,9 @@ button, input, select, textarea { font: inherit; color: inherit; }
   .marquee-track { animation: none; }
   .btn, .f input, .f select, .f textarea { transition: none; }
   .btn:active { transform: none; }
+  /* CHANGE #8: chỉ giữ đổi màu + bóng, bỏ nhấc / vệt sáng / nghiêng icon */
+  [data-mode] .btn--cta, [data-mode] .btn--cta:is(:hover, :active, :focus-visible) { transform: none; background-image: none; }
+  [data-mode] .btn--cta:hover .ic { transform: none; }
 }
 </style>
 </head>
@@ -481,7 +520,8 @@ button, input, select, textarea { font: inherit; color: inherit; }
       </nav>
     </div>
     <label class="hdr-search hdr-desk"><svg class="ic"><use href="#i-search"/></svg><input id="hdr-q" type="search" placeholder="Tìm kiếm..." aria-label="Tìm kiếm sản phẩm"></label>
-    <a class="btn btn--sm btn--primary hdr-desk" href="#" data-internal><svg class="ic"><use href="#i-doc"/></svg>Danh Sách Báo Giá</a>
+    <!-- CHANGE #8: hover nhấc + vệt sáng + nghiêng icon -->
+    <a class="btn btn--sm btn--primary btn--cta hdr-desk" href="#" data-internal data-chg="8"><svg class="ic"><use href="#i-doc"/></svg>Danh Sách Báo Giá</a>
     <button type="button" class="icon-btn hdr-desk" aria-label="Giỏ hàng"><svg class="ic"><use href="#i-cart"/></svg></button>
 
     <div class="hdr-mobile">
@@ -598,7 +638,8 @@ button, input, select, textarea { font: inherit; color: inherit; }
               <span class="f-err" id="f-msg-err" hidden>Vui lòng mô tả nhu cầu, ví dụ số lớp, độ tuổi, ngân sách.</span>
             </div>
             <div class="qf-actions">
-              <button type="submit" class="btn btn--primary">Nhận Báo Giá Ngay</button>
+              <!-- CHANGE #8: hover nhấc + vệt sáng (site là <input type="submit"> nên không thêm icon) -->
+              <button type="submit" class="btn btn--primary btn--cta" data-chg="8">Nhận Báo Giá Ngay</button>
               <p class="qf-status" id="qf-status" role="status" aria-live="polite"></p>
             </div>
           </form>
@@ -778,6 +819,73 @@ button, input, select, textarea { font: inherit; color: inherit; }
           <li>Thêm đủ 7 chính sách; thêm "Dự án", "Đội ngũ" vào cột Về chúng tôi; bỏ dòng link website; logo có alt "Đồ chơi và Thiết bị mầm non - Việt Mỹ".</li>
           <li>Chưa dựng: DMCA và Bộ Công Thương (chờ SEO gửi mã).</li>
         </ul>
+      </div>
+
+      <div>
+        <h3><span class="pin-inline">8</span> Hiệu ứng hover nút "Danh Sách Báo Giá" và "Nhận Báo Giá Ngay"</h3>
+        <p>Hai nút chốt báo giá của trang nhưng hover hiện gần như không thấy: nút ở header chỉ mờ còn 92%, nút gửi form chỉ tối đi 5%. Rê chuột vào 2 nút ở chế độ <b>Đề xuất</b> để xem.</p>
+        <div class="tbl-wrap" style="margin-top:8px">
+          <table class="tbl">
+            <thead><tr><th>Khi rê chuột</th><th>Hiện tại</th><th>Đề xuất</th></tr></thead>
+            <tbody>
+              <tr><td>Màu nền</td><td>Giữ đỏ, mờ 92% (header) · tối 5% (form)</td><td><b>Đỏ đậm #B80D0D</b>, chữ trắng 6,77:1</td></tr>
+              <tr><td>Chuyển động</td><td>Không</td><td><b>Nhấc lên 2px + bóng đỏ mờ</b> phía dưới, 200ms</td></tr>
+              <tr><td>Vệt sáng</td><td>Không</td><td><b>1 vệt sáng chéo lướt trái → phải</b>, chạy 1 lần, 700ms</td></tr>
+              <tr><td>Icon tờ giấy (nút header)</td><td>Đứng yên</td><td><b>Nghiêng −10°</b>, 200ms</td></tr>
+              <tr><td>Nhấn</td><td>Không phản hồi</td><td><b>Lún còn 97%</b>, bóng tắt, 100ms</td></tr>
+              <tr><td>Focus bàn phím (Tab)</td><td>Không đổi</td><td>Đỏ đậm + bóng, không nhấc</td></tr>
+              <tr><td>Máy bật "giảm chuyển động"</td><td>—</td><td>Chỉ đổi màu + bóng, không nhấc, không vệt sáng</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <ul style="margin-top:8px">
+          <li>Nút gửi trên site là <code>&lt;input type="submit"&gt;</code> của Contact Form 7: không có <code>::before</code>/<code>::after</code>, không chèn icon được. Vì vậy vệt sáng làm bằng <code>background-image</code>, chạy được trên input.</li>
+          <li>Hover chỉ bật trên máy có chuột (<code>@media (hover: hover)</code>), để trên điện thoại nút không bị "dính" trạng thái hover sau khi chạm.</li>
+          <li>Phần 1 (nút header, có trên mọi trang) dán cuối <code>style-header.css</code>, phần 2 dán cuối <code>component-contact_info.css</code>. Selector cố ý cao hơn selector gốc của theme một bậc (<code>a.btn-quote</code>, <code>input[type="submit"].wpcf7-submit</code>): theme khai nút gửi bằng <code>section.contact_info .wpcf7 input[type="submit"]</code> với <code>background</code> viết gộp, nên selector thấp hơn sẽ bị xoá mất vệt sáng và hover cũ (tối 5%) vẫn đè lên. Đã tiêm thử đoạn CSS này vào website-demo-02 ngày 16/10/2026: cả 2 nút chạy đúng.</li>
+        </ul>
+        <details class="dev-css">
+          <summary>CSS cho DEV (selector theo theme thcmedia-atlas)</summary>
+<pre><code>/* 1 — cuối style-header.css: nút "Danh sách báo giá" */
+.header-wrap.header-style-1 .main-header a.btn-quote {
+  background-image: linear-gradient(115deg, transparent 40%, rgba(255,255,255,.32) 50%, transparent 60%);
+  background-size: 250% 100%; background-repeat: no-repeat; background-position: 100% 0;
+  transition: background-color .2s ease, transform .2s cubic-bezier(.23,1,.32,1), box-shadow .2s ease;
+}
+.header-wrap.header-style-1 .main-header a.btn-quote .ico { transition: transform .2s cubic-bezier(.23,1,.32,1); }
+@media (hover: hover) and (pointer: fine) {
+  .header-wrap.header-style-1 .main-header a.btn-quote:hover {
+    opacity: 1; background-color: #B80D0D; background-position: 0 0;
+    transform: translateY(-2px); box-shadow: 0 8px 18px -6px rgba(215,16,16,.55);
+    transition: background-color .2s ease, transform .2s cubic-bezier(.23,1,.32,1), box-shadow .2s ease, background-position .7s cubic-bezier(.77,0,.175,1);
+  }
+  .header-wrap.header-style-1 .main-header a.btn-quote:hover .ico { transform: rotate(-10deg) translateY(-1px); }
+}
+.header-wrap.header-style-1 .main-header a.btn-quote:focus-visible { background-color: #B80D0D; box-shadow: 0 8px 18px -6px rgba(215,16,16,.55); }
+.header-wrap.header-style-1 .main-header a.btn-quote:active { transform: scale(.97); box-shadow: none; transition-duration: .1s; }
+
+/* 2 — cuối component-contact_info.css: nút "Nhận báo giá ngay" */
+section.contact_info .wpcf7 input[type="submit"].wpcf7-submit {
+  background-image: linear-gradient(115deg, transparent 40%, rgba(255,255,255,.32) 50%, transparent 60%);
+  background-size: 250% 100%; background-repeat: no-repeat; background-position: 100% 0;
+  transition: background-color .2s ease, transform .2s cubic-bezier(.23,1,.32,1), box-shadow .2s ease;
+}
+@media (hover: hover) and (pointer: fine) {
+  section.contact_info .wpcf7 input[type="submit"].wpcf7-submit:hover {
+    filter: none; background-color: #B80D0D; background-position: 0 0;
+    transform: translateY(-2px); box-shadow: 0 8px 18px -6px rgba(215,16,16,.55);
+    transition: background-color .2s ease, transform .2s cubic-bezier(.23,1,.32,1), box-shadow .2s ease, background-position .7s cubic-bezier(.77,0,.175,1);
+  }
+}
+section.contact_info .wpcf7 input[type="submit"].wpcf7-submit:focus-visible { background-color: #B80D0D; box-shadow: 0 8px 18px -6px rgba(215,16,16,.55); }
+section.contact_info .wpcf7 input[type="submit"].wpcf7-submit:active { transform: scale(.97); box-shadow: none; transition-duration: .1s; }
+
+/* 3 — giảm chuyển động (dán kèm mỗi file) */
+@media (prefers-reduced-motion: reduce) {
+  .header-wrap.header-style-1 .main-header a.btn-quote,
+  section.contact_info .wpcf7 input[type="submit"].wpcf7-submit { background-image: none; transform: none !important; }
+  .header-wrap.header-style-1 .main-header a.btn-quote .ico { transform: none !important; }
+}</code></pre>
+        </details>
       </div>
 
       <div>
