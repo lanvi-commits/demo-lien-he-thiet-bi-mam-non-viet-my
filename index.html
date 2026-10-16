@@ -222,16 +222,18 @@ button, input, select, textarea { font: inherit; color: inherit; }
 @media (min-width: 1025px) {
   :root[data-mode="pro"] { --hdr-h: 128px; }
   [data-mode="pro"] .topbar .wrap { height: 56px; gap: 24px; overflow: visible; }
-  /* 2 bên ngoài khung nội dung để trắng: nền đỏ + mép sóng chỉ chạy trong .wrap (1268px) */
+  /* 2 bên ngoài khung nội dung để trắng: nền đỏ + mép sóng chỉ phủ vùng nội dung (content-box, 1236px)
+     → dải đỏ bắt đầu đúng mép trái tấm logo, thẳng hàng Danh Mục / giỏ hàng bên dưới */
   [data-mode="pro"] .topbar { background: var(--brand-bg); }
   [data-mode="pro"] .topbar::after { content: none; }
-  [data-mode="pro"] .topbar .wrap { position: relative; background: var(--brand-accent-deep); }
-  [data-mode="pro"] .topbar .wrap::after { content: ""; position: absolute; left: 0; right: 0; top: 100%; height: 8px;
+  [data-mode="pro"] .topbar .wrap { position: relative; background: var(--brand-accent-deep) content-box; }
+  [data-mode="pro"] .topbar-hotline { margin-right: 16px; }   /* chữ không dính mép phải dải đỏ */
+  [data-mode="pro"] .topbar .wrap::after { content: ""; position: absolute; left: var(--brand-pad-x); right: var(--brand-pad-x); top: 100%; height: 8px;
       /* round: co giãn ô lặp để vừa số sóng nguyên → 2 đầu dải không bị cụt nửa sóng */
       background: radial-gradient(circle at 12px 0, var(--brand-accent-deep) 9px, transparent 10px) 0 0 / 24px 8px round no-repeat; }
   [data-mode="pro"] .topbar-logo { display: flex; align-items: center; align-self: flex-start; position: relative; z-index: 2;
                                    height: 64px; padding: 4px 12px; background: var(--brand-bg);   /* 56px dải đỏ + thò 8px đè mép sóng */
-                                   border-radius: 0 0 var(--brand-radius-md) var(--brand-radius-md); box-shadow: var(--brand-shadow-tag); }
+                                   border-radius: 0 0 var(--brand-radius-md) 0; box-shadow: var(--brand-shadow-tag); }   /* góc trái vuông: liền với phần trắng bên ngoài, bo thì lộ đỏ ở khe góc */
   [data-mode="pro"] .topbar-logo img { width: 140px; }
   [data-mode="pro"] .hdr > .logo { display: none; }
   [data-mode="pro"] .hdr { min-height: 72px; }   /* 8px chừa mép sóng + hàng 64px */
@@ -932,7 +934,7 @@ section.contact_info .wpcf7 input[type="submit"].wpcf7-submit:active { transform
             <thead><tr><th>Thuộc tính</th><th>Hiện tại</th><th>Đề xuất</th></tr></thead>
             <tbody>
               <tr><td>Dải đỏ <code>.topbar</code></td><td>Cao 42px, chạy hết chiều ngang màn hình</td><td><b>Cao 56px, chỉ chạy trong khung nội dung</b>; 2 bên ngoài khung để trắng</td></tr>
-              <tr><td>Logo</td><td>Hàng dưới, rộng 150px</td><td><b>Trên dải đỏ, rộng 140px</b>, trên tấm trắng bo 2 góc dưới, thò xuống 8px đè lên mép sóng</td></tr>
+              <tr><td>Logo</td><td>Hàng dưới, rộng 150px</td><td><b>Trên dải đỏ, rộng 140px</b>, trên tấm trắng bo góc dưới bên phải, thò xuống 8px đè lên mép sóng; dải đỏ bắt đầu đúng mép trái tấm</td></tr>
               <tr><td>Danh Mục + menu</td><td>2 tầng (nút trên, menu dưới)</td><td><b>1 hàng</b>, cao 64px</td></tr>
               <tr><td>Header sticky cao</td><td>166px</td><td><b>128px</b></td></tr>
               <tr><td>Mobile, tablet (≤1024px)</td><td colspan="2">Giữ nguyên: header mobile đã có logo riêng ở giữa</td></tr>
@@ -942,7 +944,7 @@ section.contact_info .wpcf7 input[type="submit"].wpcf7-submit:active { transform
         <ul style="margin-top:8px">
           <li>Logo là ảnh JPEG nền trắng, chữ "Việt Mỹ" màu đỏ. Đặt thẳng lên dải đỏ đậm thì chữ chìm, nên phải có tấm nền trắng.</li>
           <li>Cách sửa trong template header: in thêm khối <code>.logo</code> vào <code>.topbar .inner</code> (trước <code>.marquee</code>) với class <code>d-none d-lg-flex</code>, thêm <code>d-lg-none</code> cho <code>.logo</code> cũ trong <code>.main-header .bar</code> (mobile vẫn dùng khối này). Khối <code>.nav</code> chuyển sang <code>flex-direction: row</code> để Danh Mục và menu nằm cùng hàng.</li>
-          <li>2 bên trắng: nền đỏ <code>#930B0B</code> và mép sóng (<code>.topbar::after</code>, mask SVG <code>topbar-scallop-edge-tile.svg</code>) đang đặt trên <code>.topbar</code> nên chạy hết chiều ngang. Chuyển cả hai sang <code>.topbar .container</code> (thêm <code>position: relative</code>), <code>.topbar</code> để nền trắng. Màn hình hẹp hơn khung thì dải đỏ tự kín 2 bên như cũ.</li>
+          <li>2 bên trắng: nền đỏ <code>#930B0B</code> và mép sóng (<code>.topbar::after</code>, mask SVG <code>topbar-scallop-edge-tile.svg</code>) đang đặt trên <code>.topbar</code> nên chạy hết chiều ngang. Chuyển cả hai sang <code>.topbar .inner</code> (thêm <code>position: relative</code>; không dùng <code>.container</code> vì có padding 12px sẽ dư 1 dải đỏ bên trái logo), <code>.topbar</code> để nền trắng. Dải đỏ bắt đầu đúng mép trái tấm logo, kết thúc thẳng hàng nút giỏ hàng; hotline lùi vào 16px để chữ không dính mép.</li>
           <li>Theme đổi sang header desktop ở 992px (<code>d-lg</code>), mockup đổi ở 1025px. Từ 992 đến 1199px cần thu khoảng cách menu và ô tìm kiếm để 1 hàng không bị tràn.</li>
         </ul>
       </div>
